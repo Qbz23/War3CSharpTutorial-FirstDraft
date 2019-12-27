@@ -1,0 +1,36 @@
+﻿STRING 1
+{
+Player 1
+}
+
+STRING 2
+{
+Force 1
+}
+
+STRING 3
+{
+asd
+}
+
+STRING 4
+{
+Any
+}
+
+STRING 5
+{
+Nondescript
+}
+
+STRING 6
+{
+Unknown
+}
+
+STRING 7
+// Abilities: A000 (ASD), Name (Name)
+{
+ASD
+}
+
