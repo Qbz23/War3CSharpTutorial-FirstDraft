@@ -22,10 +22,10 @@ namespace War3Map.Template.Source
             FogEnable(false);
             FogMaskEnable(false);
 
-            int grassId = Helpers.GetId("Lgrs");
-            SetTerrainType(0, 0, grassId, 0, 3, 0);
+            //int grassId = Helpers.GetId("Lgrs");
+            //SetTerrainType(0, 0, grassId, 0, 3, 0);
 
             Helpers.DebugPrint("Hello War3 C#!");
         }
     }
-}
+}   

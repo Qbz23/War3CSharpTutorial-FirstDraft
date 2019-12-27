@@ -21,9 +21,14 @@ namespace War3Map.Template.Launcher
 
         private static void Main()
         {
+            const string BaseMapPath = @"..\..\..\..\MyBaseMap.w3x";
+
+            var co = CompilerOptions.GetCompilerOptions(SourceCodeProjectFolderPath, OutputFolderPath);
+            co.MapEnvironment = null;
+
             // Build and launch
             var mapBuilder = new MapBuilder(OutputMapName);
-            if (mapBuilder.Build(CompilerOptions.GetCompilerOptions(SourceCodeProjectFolderPath, OutputFolderPath), AssetsFolderPath))
+            if (mapBuilder.Build(co, BaseMapPath, AssetsFolderPath))
             {
                 var mapPath = Path.Combine(OutputFolderPath, OutputMapName);
                 var absoluteMapPath = new FileInfo(mapPath).FullName;
