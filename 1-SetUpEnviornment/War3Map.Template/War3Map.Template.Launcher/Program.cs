@@ -13,11 +13,11 @@ namespace War3Map.Template.Launcher
 
         // Output
         private const string OutputFolderPath = @"..\..\..\..\artifacts";
-        private const string OutputMapName = @"Testmap.w3x";asd
+        private const string OutputMapName = @"War3CSharpTutorial.w3x";
 
         // Warcraft III
-        private const string Warcraft3ExecutableFilePath = null;
-        private const string Warcraft3CommandLineArgs = @"-nowfpause -graphicsapi Direct3D9 ";
+        private const string Warcraft3ExecutableFilePath = "C:\\Program Files (x86)\\Warcraft III Beta\\x86_64\\Warcraft III.exe";
+        private const string Warcraft3CommandLineArgs = @"-nowfpause -launch ";
 
         private static void Main()
         {
