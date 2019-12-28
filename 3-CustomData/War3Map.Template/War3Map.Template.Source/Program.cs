@@ -22,6 +22,11 @@ namespace War3Map.Template.Source
             FogEnable(false);
             FogMaskEnable(false);
 
+            location spawnLoc = Location(250, 250);                                 
+            int customUnitId = Helpers.GetId("O000");                           
+            CreateUnitAtLoc(GetLocalPlayer(), customUnitId, spawnLoc, 0.0f);    
+            //RemoveLocation(spawnLoc);
+
             //int grassId = Helpers.GetId("Lgrs");
             //SetTerrainType(0, 0, grassId, 0, 3, 0);
 

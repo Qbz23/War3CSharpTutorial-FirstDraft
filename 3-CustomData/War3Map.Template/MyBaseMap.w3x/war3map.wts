@@ -34,3 +34,9 @@ STRING 7
 ASD
 }
 
+STRING 8
+// Units: O000 (MyBlademaster), Name (Name)
+{
+MyBlademaster
+}
+
