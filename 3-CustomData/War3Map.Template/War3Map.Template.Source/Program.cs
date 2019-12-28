@@ -24,8 +24,10 @@ namespace War3Map.Template.Source
 
             location spawnLoc = Location(250, 250);                                 
             int customUnitId = Helpers.GetId("O000");                           
-            CreateUnitAtLoc(GetLocalPlayer(), customUnitId, spawnLoc, 0.0f);    
+            var myUnit = CreateUnitAtLoc(GetLocalPlayer(), customUnitId, spawnLoc, 0.0f);    
             RemoveLocation(spawnLoc);
+            int customSpellId = Helpers.GetId("A000");
+            UnitAddAbility(myUnit, customSpellId);
 
             //int grassId = Helpers.GetId("Lgrs");
             //SetTerrainType(0, 0, grassId, 0, 3, 0);
