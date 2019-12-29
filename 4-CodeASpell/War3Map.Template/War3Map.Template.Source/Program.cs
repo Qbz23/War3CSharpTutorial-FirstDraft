@@ -25,7 +25,70 @@ namespace War3Map.Template.Source
 
         static void spellActions()
         {
-            Helpers.DebugPrint("My spell was cast!");
+            // Range around the caster that targets can be hit from 
+            const float spellRange = 750;
+            // Max number of targets the spell can hit 
+            const uint maxTargets = 6;
+            // The amount of damage each strike deals 
+            const float damage = 250;
+
+            // Gets the unit that cast the spell associated with this trigger 
+            // and saves it into a variable 
+            unit caster = GetSpellAbilityUnit();
+            // Gets the location of the caster 
+            location startPos = GetUnitLoc(caster);
+
+            // Create a group variable to hold the units the spell will hit 
+            group targets = CreateGroup();
+            // a variable to decrement each time we hit a target 
+            uint count = maxTargets;
+            // a unit variable to hold the target we're currently hitting 
+            unit currentTarget;
+
+            // Put all units within spellRange of startPos into the targets  group 
+            GroupEnumUnitsInRangeOfLoc(targets, startPos, spellRange, null);
+            // store the first unit in the group into the currentTarget variable
+            currentTarget = FirstOfGroup(targets);
+
+            // While there's still a target to hit and we have't yet hit max targets
+            while (currentTarget != null && count > 0)
+            {
+                // GroupEnumUnitsInRangeOfLoc includes allied and dead units 
+                // We want to check that the unit we're currently considering is 
+                // both an enemy and alive 
+                if (IsUnitEnemy(currentTarget, GetOwningPlayer(caster)) &&
+                    BlzIsUnitSelectable(currentTarget)) // Selectable means alive 
+                {
+                    // Get the location of the enemy we're targeting 
+                    location targetLocation = GetUnitLoc(currentTarget);
+                    // Teleport our caster to the enemy's location 
+                    SetUnitPositionLoc(caster, targetLocation);
+
+                    // Have the caster deal damage to the enemy 
+                    UnitDamageTarget(caster, currentTarget, damage, true, false,
+                        ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null);
+
+                    // Decrement the count, as we hit a target 
+                    count -= 1;
+
+                    // Take a brief pause before teleporting to the next target 
+                    TriggerSleepAction(0.15f);
+
+                    // Cleanup 
+                    RemoveLocation(targetLocation);
+                }
+
+                // Remove the unit we just considered from the group 
+                GroupRemoveUnit(targets, currentTarget);
+
+                // Get the next unit in the group to consider. If the group is
+                // empty, this will return null and break out of the while loop
+                currentTarget = FirstOfGroup(targets);
+            }
+
+            // Cleanup
+            RemoveLocation(startPos);
+            DestroyGroup(targets);
         }
 
         private static void Main()
