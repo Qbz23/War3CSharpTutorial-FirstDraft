@@ -17,6 +17,16 @@ namespace War3Map.Template.Source
 
     internal static class Program
     {
+        static bool spellCondition()
+        {
+            return GetSpellAbilityId() == Helpers.GetId("A000");
+        }
+
+        static void spellActions()
+        {
+            Helpers.DebugPrint("My spell was cast!");
+        }
+
         private static void Main()
         {
             FogEnable(false);
@@ -28,6 +38,11 @@ namespace War3Map.Template.Source
             RemoveLocation(spawnLoc);
             int customSpellId = Helpers.GetId("A000");
             UnitAddAbility(myUnit, customSpellId);
+
+            var spellTrigger = CreateTrigger();
+            TriggerRegisterPlayerUnitEvent(spellTrigger, GetLocalPlayer(), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+            TriggerAddCondition(spellTrigger, Condition(spellCondition));
+            TriggerAddAction(spellTrigger, spellActions);
 
             //int grassId = Helpers.GetId("Lgrs");
             //SetTerrainType(0, 0, grassId, 0, 3, 0);
