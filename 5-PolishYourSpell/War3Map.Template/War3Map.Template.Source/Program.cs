@@ -23,6 +23,17 @@ namespace War3Map.Template.Source
             return GetSpellAbilityId() == Helpers.GetId("A000");
         }
 
+        static bool filterCondition()
+        {
+            // The unit being potentially filtered out of the group
+            unit checkedUnit = GetFilterUnit();
+            // The unit that activated the trigger, in this case the caster 
+            unit caster = GetTriggerUnit();
+            // Include unit in the group if its an enemy and selectable (alive)
+            return IsUnitEnemy(checkedUnit, GetOwningPlayer(caster)) && 
+                   BlzIsUnitSelectable(checkedUnit);
+        }
+
         static void spellActions()
         {
             // Range around the caster that targets can be hit from 
@@ -46,54 +57,64 @@ namespace War3Map.Template.Source
             unit currentTarget;
 
             // Put all units within spellRange of startPos into the targets  group 
-            GroupEnumUnitsInRangeOfLoc(targets, startPos, spellRange, null);
+            GroupEnumUnitsInRangeOfLoc(targets, startPos, spellRange, Condition(filterCondition));
             // store the first unit in the group into the currentTarget variable
             currentTarget = FirstOfGroup(targets);
+
+            // Time to play attack animation
+            float attackTime = 0.6f;
+            // Time to pause before the next teleport
+            float teleportDelay = 0.05f;
+            // Total time used for each unit to hit 
+            float timePerUnit = attackTime + teleportDelay;
+            // Determine how many units will be hit
+            int numUnitsHit = (int)Math.Min(BlzGroupGetSize(targets), maxTargets);
+            // Total time the spell should take 
+            float followThroughTime = timePerUnit * numUnitsHit;
+            // Sets the spell follow through time to the calculated value 
+            BlzSetAbilityRealLevelField(GetSpellAbility(), ABILITY_RLF_FOLLOW_THROUGH_TIME, 0, followThroughTime);
 
             // While there's still a target to hit and we have't yet hit max targets
             while (currentTarget != null && count > 0)
             {
-                // GroupEnumUnitsInRangeOfLoc includes allied and dead units 
-                // We want to check that the unit we're currently considering is 
-                // both an enemy and alive 
-                if (IsUnitEnemy(currentTarget, GetOwningPlayer(caster)) &&
-                    BlzIsUnitSelectable(currentTarget)) // Selectable means alive 
-                {
-                    // Get the location of the enemy we're targeting 
-                    location targetLocation = GetUnitLoc(currentTarget);
-                    // Teleport our caster to the enemy's location 
-                    SetUnitPositionLoc(caster, targetLocation);
 
-                    // You teleported to the enemy, but you didn't teleport in their 
-                    // exact same location, you got pushed out in some direction
-                    location newCasterPos = GetUnitLoc(caster);
-                    // Get the diference between the caster and the target 
-                    float deltaX = GetLocationX(targetLocation) - GetLocationX(newCasterPos);
-                    float deltaY = GetLocationY(targetLocation) - GetLocationY(newCasterPos);
-                    // Take the inverse tangent of that difference vector 
-                    // and convert it from radians to degrees 
-                    float angleInDegrees = 57.2957f * (float)Math.Atan2(deltaY, deltaX);
-                    // Make the caster face the calculated angle. 
-                    SetUnitFacing(caster, angleInDegrees);
-                    // Cleanup
-                    RemoveLocation(newCasterPos);
+                // Get the location of the enemy we're targeting 
+                location targetLocation = GetUnitLoc(currentTarget);
+                // Teleport our caster to the enemy's location 
+                SetUnitPositionLoc(caster, targetLocation);
 
-                    // Have the caster play its attack animation
-                    SetUnitAnimation(caster, "attack");
+                // You teleported to the enemy, but you didn't teleport in their 
+                // exact same location, you got pushed out in some direction
+                location newCasterPos = GetUnitLoc(caster);
+                // Get the diference between the caster and the target 
+                float deltaX = GetLocationX(targetLocation) - GetLocationX(newCasterPos);
+                float deltaY = GetLocationY(targetLocation) - GetLocationY(newCasterPos);
+                // Take the inverse tangent of that difference vector 
+                // and convert it from radians to degrees 
+                float angleInDegrees = 57.2957f * (float)Math.Atan2(deltaY, deltaX);
+                // Make the caster face the calculated angle. 
+                SetUnitFacing(caster, angleInDegrees);
+                // Cleanup
+                RemoveLocation(newCasterPos);
 
-                    // Have the caster deal damage to the enemy 
-                    UnitDamageTarget(caster, currentTarget, damage, true, false,
-                        ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null);
+                // Have the caster play its attack animation
+                SetUnitAnimation(caster, "attack");
 
-                    // Decrement the count, as we hit a target 
-                    count -= 1;
+                // Sleep before dealing damage while attack animation is playing
+                TriggerSleepAction(attackTime);
 
-                    // Take a brief pause before teleporting to the next target 
-                    TriggerSleepAction(0.15f);
+                // Have the caster deal damage to the enemy 
+                UnitDamageTarget(caster, currentTarget, damage, true, false,
+                    ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null);
 
-                    // Cleanup 
-                    RemoveLocation(targetLocation);
-                }
+                // Decrement the count, as we hit a target 
+                count -= 1;
+
+                // Take a brief pause before teleporting to the next target 
+                TriggerSleepAction(teleportDelay);
+
+                // Cleanup 
+                RemoveLocation(targetLocation);
 
                 // Remove the unit we just considered from the group 
                 GroupRemoveUnit(targets, currentTarget);
