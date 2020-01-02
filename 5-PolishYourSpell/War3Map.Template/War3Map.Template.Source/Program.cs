@@ -58,6 +58,8 @@ namespace War3Map.Template.Source
 
             // Put all units within spellRange of startPos into the targets  group 
             GroupEnumUnitsInRangeOfLoc(targets, startPos, spellRange, Condition(filterCondition));
+            // Cleanup, no longer need startPos
+            RemoveLocation(startPos);
             // store the first unit in the group into the currentTarget variable
             currentTarget = FirstOfGroup(targets);
 
@@ -74,14 +76,26 @@ namespace War3Map.Template.Source
             // Sets the spell follow through time to the calculated value 
             BlzSetAbilityRealLevelField(GetSpellAbility(), ABILITY_RLF_FOLLOW_THROUGH_TIME, 0, followThroughTime);
 
+            // Effect model names
+            const string blinkName = @"Abilities\Spells\NightElf\Blink\BlinkCaster.mdl";
+            const string shockName = @"Abilities\Spells\Items\AIlb\AIlbSpecialArt.mdl";
+
             // While there's still a target to hit and we have't yet hit max targets
             while (currentTarget != null && count > 0)
             {
+                // Get start location for blink effect 
+                location oldCasterPos = GetUnitLoc(caster);
+                // Create blink effect, save it to clean it up later
+                effect preBlinkEffect = AddSpecialEffectLoc(blinkName, oldCasterPos);
+                // Cleanup location
+                RemoveLocation(oldCasterPos);
 
                 // Get the location of the enemy we're targeting 
                 location targetLocation = GetUnitLoc(currentTarget);
                 // Teleport our caster to the enemy's location 
                 SetUnitPositionLoc(caster, targetLocation);
+                // Create blink effect at destination
+                effect postBlinkEffect = AddSpecialEffectLoc(blinkName, targetLocation);
 
                 // You teleported to the enemy, but you didn't teleport in their 
                 // exact same location, you got pushed out in some direction
@@ -96,36 +110,37 @@ namespace War3Map.Template.Source
                 SetUnitFacing(caster, angleInDegrees);
                 // Cleanup
                 RemoveLocation(newCasterPos);
+                RemoveLocation(targetLocation);
 
                 // Have the caster play its attack animation
                 SetUnitAnimation(caster, "attack");
-
                 // Sleep before dealing damage while attack animation is playing
                 TriggerSleepAction(attackTime);
-
                 // Have the caster deal damage to the enemy 
                 UnitDamageTarget(caster, currentTarget, damage, true, false,
                     ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null);
-
+                // Create shock effect on damage
+                effect shockEffect = AddSpecialEffectTarget(shockName, currentTarget, "chest");
+                // Scale up shock effect 
+                BlzSetSpecialEffectScale(shockEffect, 1.5f);
                 // Decrement the count, as we hit a target 
                 count -= 1;
-
                 // Take a brief pause before teleporting to the next target 
                 TriggerSleepAction(teleportDelay);
 
                 // Cleanup 
-                RemoveLocation(targetLocation);
+                DestroyEffect(preBlinkEffect);
+                DestroyEffect(postBlinkEffect);
+                DestroyEffect(shockEffect);
 
-                // Remove the unit we just considered from the group 
+                // Remove the unit we just hit from the group 
                 GroupRemoveUnit(targets, currentTarget);
-
                 // Get the next unit in the group to consider. If the group is
                 // empty, this will return null and break out of the while loop
                 currentTarget = FirstOfGroup(targets);
             }
 
             // Cleanup
-            RemoveLocation(startPos);
             DestroyGroup(targets);
         }
 
