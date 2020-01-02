@@ -64,6 +64,23 @@ namespace War3Map.Template.Source
                     // Teleport our caster to the enemy's location 
                     SetUnitPositionLoc(caster, targetLocation);
 
+                    // You teleported to the enemy, but you didn't teleport in their 
+                    // exact same location, you got pushed out in some direction
+                    location newCasterPos = GetUnitLoc(caster);
+                    // Get the diference between the caster and the target 
+                    float deltaX = GetLocationX(targetLocation) - GetLocationX(newCasterPos);
+                    float deltaY = GetLocationY(targetLocation) - GetLocationY(newCasterPos);
+                    // Take the inverse tangent of that difference vector 
+                    // and convert it from radians to degrees 
+                    float angleInDegrees = 57.2957f * (float)Math.Atan2(deltaY, deltaX);
+                    // Make the caster face the calculated angle. 
+                    SetUnitFacing(caster, angleInDegrees);
+                    // Cleanup
+                    RemoveLocation(newCasterPos);
+
+                    // Have the caster play its attack animation
+                    SetUnitAnimation(caster, "attack");
+
                     // Have the caster deal damage to the enemy 
                     UnitDamageTarget(caster, currentTarget, damage, true, false,
                         ATTACK_TYPE_CHAOS, DAMAGE_TYPE_NORMAL, null);
